@@ -1,0 +1,34 @@
+@charset "ISO-8859-1";
+
+/*Trabajando con la pagina Administrador.jsp*/
+header {
+	background-color: #3C3F42;
+	display: flex;
+	justify-content: space-around;
+	align-items: center;
+	color: white;
+}
+
+main {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+}
+
+a {
+	color: white;
+}
+
+.conteiner__h2 {
+	font-size: 25px;
+	margin-top: 50px;
+}
+
+.conteiner__links {
+	width: 300px;
+	display: flex;
+	flex-direcion: row;
+	justify-content: space-around;
+}
+
+/*Fin Trabajando con la pagina Administrador.jsp*/

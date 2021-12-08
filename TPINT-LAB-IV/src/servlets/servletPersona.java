@@ -1,0 +1,649 @@
+package servlets;
+
+import java.io.IOException;
+
+import javax.servlet.RequestDispatcher;
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import daoImplementacion.daoImplAlumno;
+import daoImplementacion.daoImplCursAlumn;
+import daoImplementacion.daoImplCursos;
+import daoImplementacion.daoImplDocente;
+import daoImplementacion.daoImplLocalidad;
+import daoImplementacion.daoImplLogin;
+import daoImplementacion.daoImplMateria;
+import daoImplementacion.daoImplPais;
+import daoImplementacion.daoImplPerfil;
+import daoImplementacion.daoImplProvincia;
+
+import java.util.ArrayList;
+
+import entidad.Alumno;
+import entidad.Curso;
+import entidad.Docente;
+import entidad.Localidad;
+import entidad.Materia;
+import entidad.Pais;
+import entidad.Perfil;
+import entidad.Provincia;
+import entidad.CursosAlumnos;
+
+
+@WebServlet("/servletPersona")
+public class servletPersona extends HttpServlet {
+	private static final long serialVersionUID = 1L;
+       
+	
+    public servletPersona() {
+        super();
+     
+    }
+
+	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+	
+		
+		daoImplAlumno daoAlumno = new daoImplAlumno();
+		daoImplDocente daoDocente = new daoImplDocente();
+		daoImplLocalidad daoLocalidad = new daoImplLocalidad(); 
+		daoImplProvincia daoProvincia = new daoImplProvincia();
+		daoImplPais daoPais = new daoImplPais();
+		daoImplPerfil daoPerfil = new daoImplPerfil();
+		daoImplCursAlumn daoCursosxAlumnos = new daoImplCursAlumn();
+		
+		daoImplCursos daoCursos = new daoImplCursos();
+		daoImplMateria daoMateria = new daoImplMateria();
+		
+		ArrayList<Pais> listaPaises = daoPais.readAll();
+		ArrayList<Provincia> listaProvincias = daoProvincia.readAll();
+		ArrayList<Localidad> listaLocalidades = daoLocalidad.readAll();   
+		ArrayList<Alumno> listaAlumnos= daoAlumno.readAll();
+		ArrayList<Docente> listaDocentes= daoDocente.readAll();
+		ArrayList<Materia> listaMaterias = daoMateria.readAll();
+		
+		if(request.getParameter("toAdmGeneral")!=null)   // ---LINK HACIA ADMINISTRADOR
+		{
+				
+				RequestDispatcher rd = request.getRequestDispatcher("Administrador/Administrador.jsp");  
+				
+		        rd.forward(request, response);	
+		}
+		
+		
+		
+		if(request.getParameter("toAdmAlumnos")!=null)   // ---LINK HACIA ADMINISTRADOR ALUMNOS
+		{
+				request.setAttribute("listaAlumnos", listaAlumnos);
+				request.setAttribute("listaProvincias", listaProvincias);
+				request.setAttribute("listaPaises", listaPaises);
+				
+				RequestDispatcher rd = request.getRequestDispatcher("Administrador/AdministradorAlumnos.jsp");  
+				
+		        rd.forward(request, response);	
+		}
+		
+		if(request.getParameter("toAdmDocentes")!=null)  // ---LINK HACIA ADMINISTRADOR DOCENTES
+		{
+				request.setAttribute("listaDocentes", listaDocentes);
+				request.setAttribute("listaLocalidades", listaLocalidades);
+				request.setAttribute("listaPaises", listaPaises);
+				
+				RequestDispatcher rd = request.getRequestDispatcher("Administrador/AdministradorDocentes.jsp");   
+		        rd.forward(request, response);	
+		}
+		
+		if(request.getParameter("toDocentes")!=null)  // ---LINK HACIA DOCENTES
+		{
+
+				RequestDispatcher rd = request.getRequestDispatcher("Docente/Docente.jsp");   
+		        rd.forward(request, response);	
+		}
+		
+		
+		if(request.getParameter("eliminarAlumno")!=null)  // ---BOTON QUE ELIMINA ALUMNOS
+		{
+			
+			int dni = Integer.parseInt(request.getParameter("dniAlumno").toString());
+			
+			boolean isDeleteExitoso = daoAlumno.delete(dni);
+			
+			listaPaises = daoPais.readAll();
+			listaProvincias = daoProvincia.readAll();
+			listaAlumnos= daoAlumno.readAll();
+			
+			   request.setAttribute("deleteExitoso",isDeleteExitoso);
+			   request.setAttribute("listaAlumnos", listaAlumnos);
+				request.setAttribute("listaProvincias", listaProvincias);
+				request.setAttribute("listaPaises", listaPaises);
+			   
+		       RequestDispatcher rd = request.getRequestDispatcher("Administrador/AdministradorAlumnos.jsp");
+		       rd.forward(request, response);
+		}
+		
+		
+		
+       if(request.getParameter("modificarAlumnoAviso") != null) {
+			
+			listaPaises = daoPais.readAll();
+			listaProvincias = daoProvincia.readAll();
+			listaDocentes= daoDocente.readAll();
+			
+			
+			request.setAttribute("listaAlumnos", listaAlumnos);
+			request.setAttribute("listaProvincias", listaProvincias);
+			request.setAttribute("listaPaises", listaPaises);
+			
+			int dni = Integer.parseInt(request.getParameter("dniAlumno").toString());
+			request.setAttribute("avisoModificarAlumno", dni);
+			
+			System.out.println(request.getAttribute("avisoModificarAlumno"));
+			RequestDispatcher rd = request.getRequestDispatcher("Administrador/AdministradorAlumnos.jsp");
+		    rd.forward(request, response);
+		}
+		
+		
+		if(request.getParameter("modificarAlumno")!=null)    // ---BOTON QUE MODIFICA ALUMNOS
+		{
+			
+			Alumno alumno = new Alumno();
+			boolean isUpdateExitoso = false;
+			String mensaje = "";
+			
+			 if(daoDocente.verificarLegajo(Integer.parseInt(request.getParameter("legajoAlumno").toString())))
+             {
+             	if(daoDocente.verificarEmail(request.getParameter("emailAlumno").toString()))
+                 {
+			alumno.setDni(Integer.parseInt(request.getParameter("dniAlumno").toString()));
+			alumno.setLegajo(Integer.parseInt(request.getParameter("legajoAlumno").toString()));
+			alumno.setNombreApellido(request.getParameter("nombreAlumno").toString());
+			alumno.setFechaNacimiento(request.getParameter("nacimientoAlumno").toString());
+			alumno.setDireccion(request.getParameter("direccionAlumno").toString());
+			alumno.setProvincia(daoProvincia.provinciaFromID(Integer.parseInt(request.getParameter("provinciaAlumno").toString())));
+			alumno.setNacionalidad(daoPais.paisFromID(Integer.parseInt(request.getParameter("nacionalidadAlumno").toString())));
+			alumno.setEmail(request.getParameter("emailAlumno").toString());		                     
+			alumno.setTelefono(Integer.parseInt(request.getParameter("telefonoAlumno").toString()));		                     
+			alumno.setEstado(true);
+			isUpdateExitoso = daoAlumno.update(alumno);
+			
+			mensaje = (isUpdateExitoso) ? "Modificado correctamente" : "Ocurrio un error al modificar el Alumno";    
+                 } 
+                 else 
+                 {
+                 mensaje = "El Email solicitado ya existe";	
+                 }
+              } 
+              else 
+              {
+              mensaje = "El Legajo solicitado ya existe";	
+              }         	
+			
+			
+			listaPaises = daoPais.readAll();
+			listaProvincias = daoProvincia.readAll();
+			listaAlumnos= daoAlumno.readAll();
+			
+			request.setAttribute("updateExitosoAlumno",mensaje);
+			request.setAttribute("listaAlumnos", listaAlumnos);
+			request.setAttribute("listaProvincias", listaProvincias);
+			request.setAttribute("listaPaises", listaPaises);
+			
+			request.setAttribute("avisoModificarAlumno", null);
+			
+		    RequestDispatcher rd = request.getRequestDispatcher("./servletPersona?toAdmAlumnos=1");
+		    rd.forward(request, response);
+			
+		}
+		
+		if(request.getParameter("eliminarDocente")!=null)     // ---BOTON QUE ELIMINA DOCENTES
+		{
+			
+			int dni = Integer.parseInt(request.getParameter("dniDocente").toString());
+			
+			boolean isDeleteExitoso = daoDocente.delete(dni);
+			boolean isDeleteExitoso2 = daoPerfil.delete(dni);
+			
+			String mensaje = "";
+			
+			/*Operador ternario*/
+			mensaje = (isDeleteExitoso && isDeleteExitoso2) ? "Eliminado correctamente" : (!isDeleteExitoso) ? 
+			"Ocurrio un error al eliminar el docente" : (!isDeleteExitoso2) ? "Ocurrio un error al eliminar su usuario" : "Ocurrio un error";
+			
+			
+			
+			
+			listaPaises = daoPais.readAll();
+			listaLocalidades = daoLocalidad.readAll();
+			listaDocentes= daoDocente.readAll();
+			
+			   request.setAttribute("deleteExitosoDocente",mensaje);
+			   
+			   request.setAttribute("listaDocentes", listaDocentes);
+				request.setAttribute("listaLocalidades", listaLocalidades);
+				request.setAttribute("listaPaises", listaPaises);
+			   
+		       RequestDispatcher rd = request.getRequestDispatcher("Administrador/AdministradorDocentes.jsp");
+		       rd.forward(request, response);
+		}
+		
+		
+		if(request.getParameter("modificarDocenteAviso") != null) {
+			
+			listaPaises = daoPais.readAll();
+			listaLocalidades = daoLocalidad.readAll();
+			listaDocentes= daoDocente.readAll();
+			
+			
+			request.setAttribute("listaDocentes", listaDocentes);
+			request.setAttribute("listaLocalidades", listaLocalidades);
+			request.setAttribute("listaPaises", listaPaises);
+			
+			int dni = Integer.parseInt(request.getParameter("dniDocente").toString());
+			request.setAttribute("avisoModificarDocente", dni);
+			
+			System.out.println(request.getAttribute("avisoModificarDocente"));
+			RequestDispatcher rd = request.getRequestDispatcher("Administrador/AdministradorDocentes.jsp");
+		    rd.forward(request, response);
+		}
+		
+		if(request.getParameter("modificarDocente")!=null) // ---BOTON QUE MODIFICA DOCENTES
+		{
+			boolean isUpdateExitoso;
+			Docente docente = new Docente();
+			String mensaje = "";
+					
+			if(daoAlumno.verificarLegajo(Integer.parseInt(request.getParameter("legajoDocente").toString())))
+            {
+            	if(daoAlumno.verificarEmail(request.getParameter("emailDocente").toString()))
+                {
+			docente.setDni(Integer.parseInt(request.getParameter("dniDocente").toString()));
+			docente.setLegajo(Integer.parseInt(request.getParameter("legajoDocente").toString()));
+			docente.setNombreApellido(request.getParameter("nombreDocente").toString());
+			docente.setFechaNacimiento(request.getParameter("nacimientoDocente").toString());
+			docente.setDireccion(request.getParameter("direccionDocente").toString());
+			docente.setLocalidad(daoLocalidad.localidadFromID(Integer.parseInt(request.getParameter("localidadDocente").toString())));
+			docente.setNacionalidad(daoPais.paisFromID(Integer.parseInt(request.getParameter("nacionalidadDocente").toString())));
+			docente.setEmail(request.getParameter("emailDocente").toString());		                     
+			docente.setTelefono(Integer.parseInt(request.getParameter("telefonoDocente").toString()));		                     
+			docente.setEstado(true);		                     
+					         	
+			isUpdateExitoso = daoDocente.update(docente);
+			mensaje = (isUpdateExitoso) ? "Modificado correctamente" : "Ocurrio un error al modificar el Docente";    
+                } 
+                else 
+                {
+                mensaje = "El Email solicitado ya existe";	
+                }
+            } 
+            else 
+            {
+            mensaje = "El Legajo solicitado ya existe";	
+            }
+			                         	
+			
+			listaPaises = daoPais.readAll();
+			listaLocalidades = daoLocalidad.readAll();
+			listaDocentes= daoDocente.readAll();
+			
+			request.setAttribute("updateExitosoDocente",mensaje);
+			
+			request.setAttribute("listaDocentes", listaDocentes);
+			request.setAttribute("listaLocalidades", listaLocalidades);
+			request.setAttribute("listaPaises", listaPaises);
+
+			
+			request.setAttribute("avisoModificarDocente", null);
+			
+		    RequestDispatcher rd = request.getRequestDispatcher("./servletPersona?toAdmDocentes=1");
+ 
+		    rd.forward(request, response);
+			
+		}
+
+
+	   if(request.getParameter("agregarAlumno")!=null) // ---BOTON QUE AGREGA alumnos
+		{
+		   
+		    request.setAttribute("listaProvincias", listaProvincias);
+			request.setAttribute("listaPaises", listaPaises);
+		   
+		    String mensaje = "";
+            boolean isInsertExitoso = false;
+			Alumno alumno = new Alumno();
+			
+            if (daoDocente.verificarDni(Integer.parseInt(request.getParameter("dniAlumno").toString()))) 
+            {
+                if(daoDocente.verificarLegajo(Integer.parseInt(request.getParameter("legajoAlumno").toString())))
+                {
+                	if(daoDocente.verificarEmail(request.getParameter("emailAlumno").toString()))
+                    {
+			alumno.setDni(Integer.parseInt(request.getParameter("dniAlumno").toString()));
+			alumno.setLegajo(Integer.parseInt(request.getParameter("legajoAlumno").toString()));
+	        alumno.setNombreApellido(request.getParameter("nombreAlumno").toString());
+	        alumno.setFechaNacimiento(request.getParameter("nacimientoAlumno").toString());
+		    alumno.setDireccion(request.getParameter("direccionAlumno").toString());
+			alumno.setNacionalidad(daoPais.paisFromID(Integer.parseInt(request.getParameter("nacionalidadAlumno").toString())));
+			alumno.setProvincia(daoProvincia.provinciaFromID(Integer.parseInt(request.getParameter("provinciaAlumno").toString())));
+			alumno.setEmail(request.getParameter("emailAlumno").toString());		                     
+			alumno.setTelefono(Integer.parseInt(request.getParameter("telefonoAlumno").toString()));		                     
+			alumno.setEstado(true);	
+			
+			isInsertExitoso = daoAlumno.insert(alumno);
+			mensaje = (isInsertExitoso) ? "Agregado correctamente" : "Ocurrio un error al agregar el Alumno";    
+                   } 
+                   else 
+                   {
+                   mensaje = "El Email solicitado ya existe";	
+                   }
+                } 
+                else 
+                {
+                mensaje = "El Legajo solicitado ya existe";	
+                }
+            } 
+            else 
+            {
+            mensaje = "El Dni solicitado ya existe";
+            }
+			
+			
+			request.setAttribute("insertExitosoAlumno",mensaje);
+			
+			RequestDispatcher rd = request.getRequestDispatcher("Administrador/AltaAlumno.jsp");
+			rd.forward(request, response);
+			
+		}
+		
+		if(request.getParameter("agregarDocente")!=null) // -----BOTON QUE AGREGA DOCENTES
+		{
+
+			request.setAttribute("listaLocalidades", listaLocalidades);
+			request.setAttribute("listaPaises", listaPaises);
+			
+			
+			    String mensaje = "";
+	            boolean isInsertExitoso = false;
+				Docente docente = new Docente();
+				
+	            if (daoAlumno.verificarDni(Integer.parseInt(request.getParameter("dniDocente").toString()))) 
+	            {
+	                if(daoAlumno.verificarLegajo(Integer.parseInt(request.getParameter("legajoDocente").toString())))
+	                {
+	                	if(daoAlumno.verificarEmail(request.getParameter("emailDocente").toString()))
+	                    {
+			docente.setDni(Integer.parseInt(request.getParameter("dniDocente").toString()));
+			docente.setLegajo(Integer.parseInt(request.getParameter("legajoDocente").toString()));
+			docente.setNombreApellido(request.getParameter("nombreDocente").toString());
+			docente.setFechaNacimiento(request.getParameter("nacimientoDocente").toString());
+			docente.setDireccion(request.getParameter("direccionDocente").toString());
+			docente.setLocalidad(daoLocalidad.localidadFromID(Integer.parseInt(request.getParameter("localidadDocente").toString())));
+			docente.setNacionalidad(daoPais.paisFromID(Integer.parseInt(request.getParameter("nacionalidadDocente").toString())));
+			docente.setEmail(request.getParameter("emailDocente").toString());		                     
+			docente.setTelefono(Integer.parseInt(request.getParameter("telefonoDocente").toString()));		                     
+			docente.setEstado(true);	
+			
+			isInsertExitoso = daoDocente.insert(docente);
+			
+			mensaje = (isInsertExitoso) ? "Agregado correctamente" : "Ocurrio un error al agregar el Docente";    
+	                    } 
+	                    else 
+	                    {
+	                    mensaje = "El Email solicitado ya existe";	
+	                    }
+	                } 
+	                else 
+	                {
+	                mensaje = "El Legajo solicitado ya existe";	
+	                }
+	            } 
+	            else 
+	            {
+	            mensaje = "El Dni solicitado ya existe";
+	            }
+				
+			
+			
+			request.setAttribute("insertExitosoDocente",mensaje);
+			
+			//Ocurrio un error al agregar el docente, por lo tanto, no se agrega su perfil 
+			if(!isInsertExitoso) 
+			{
+				RequestDispatcher rd = request.getRequestDispatcher("Administrador/AltaDocente.jsp");
+			    rd.forward(request, response);
+			}
+			
+			
+			Perfil perfil = new Perfil();
+			
+			perfil.setDni(docente.getDni());
+			perfil.setEmail(docente.getEmail());
+			perfil.setContrasenia(request.getParameter("contraseniaDocente").toString());
+			
+			boolean isInsertExitoso2 = daoPerfil.insert(perfil);
+			
+			mensaje = (isInsertExitoso2) ? "Agregado correctamente" : "Ocurrio un error al agregar su usuario";
+			
+			request.setAttribute("insertExitosoDocente",mensaje);
+			
+			/*Este caso es en el que no haya ocurrido ningun error, por lo tanto se muestra el mensaje en admDocentes*/
+			if(isInsertExitoso && isInsertExitoso2) {
+
+				RequestDispatcher rd = request.getRequestDispatcher("Administrador/AltaDocente.jsp");
+			    rd.forward(request, response);
+			}
+			
+			/*Este caso es en el que haya ocurrido un error, por lo tanto se muestra el mensaje en AgregarDocente*/
+			  RequestDispatcher rd = request.getRequestDispatcher("servletPersona?toAgregarDocente=1");
+
+			    rd.forward(request, response);
+	        }
+		
+		
+		if(request.getParameter("toAgregarDocente")!=null)  // ---LINK HACIA AGREGAR DOCENTES
+		{
+				
+				request.setAttribute("listaLocalidades", listaLocalidades);
+				request.setAttribute("listaPaises", listaPaises);
+				
+				RequestDispatcher rd = request.getRequestDispatcher("Administrador/AltaDocente.jsp");  
+				
+		        rd.forward(request, response);	
+		}
+		
+		if(request.getParameter("toAgregarAlumno")!=null)  // ---LINK HACIA AGREGAR ALUMNOS
+		{
+				
+				request.setAttribute("listaProvincias", listaProvincias);
+				request.setAttribute("listaPaises", listaPaises);
+				
+				RequestDispatcher rd = request.getRequestDispatcher("Administrador/AltaAlumno.jsp");  
+				
+		        rd.forward(request, response);	
+		}
+		
+		
+		if(request.getParameter("cerrarSesion")!=null)  // ---LINK HACIA LOGIN ELIMINANDO VARIABLE SESSION
+		{
+				
+				request.getSession().removeAttribute("Perfil");
+				RequestDispatcher rd = request.getRequestDispatcher("Login.jsp");  
+				
+		        rd.forward(request, response);	
+		}
+		
+		if(request.getParameter("toCursos")!=null) { // ---LINK HACIA CURSOS SEGUN PROFESOR
+		
+		    Perfil perfilDocente = (Perfil)request.getSession().getAttribute("Perfil");
+			ArrayList<Curso> listaCursos = daoCursos.readAllFromProf(perfilDocente.getDni());
+			
+			request.setAttribute("listaCursos", listaCursos);
+			request.setAttribute("listaMaterias", listaMaterias );
+			RequestDispatcher rd = request.getRequestDispatcher("Docente/Cursos.jsp");
+			
+			rd.forward(request, response);
+		}
+		
+		if(request.getParameter("toCursosxAlumnos")!=null) { // ---LINK HACIA ALUMNOS POR CURSO
+			
+			
+			int idCurso = Integer.parseInt(request.getParameter("toCursosxAlumnos").toString());
+			Curso cursoPorID = daoCursos.cursoFromID(idCurso);
+			
+			ArrayList<CursosAlumnos> notasAlumnos = daoCursosxAlumnos.readAllFromID(idCurso);
+			
+			request.setAttribute("listaAlumnos", listaAlumnos);
+			request.setAttribute("notasAlumnos", notasAlumnos);
+			request.setAttribute("cursoPorID", cursoPorID);
+			request.setAttribute("listaMaterias", listaMaterias );
+			RequestDispatcher rd = request.getRequestDispatcher("Docente/AlumnosCursos.jsp");
+			
+			rd.forward(request, response);
+		
+		}
+		
+        if(request.getParameter("modificarNotas")!=null) { // ---BOTON PARA MODIFICAR CURSOSXALUMNOS
+			
+			CursosAlumnos notas = new CursosAlumnos();
+			ArrayList<CursosAlumnos> notasAlumnos = new ArrayList<CursosAlumnos>();
+			int filas=Integer.parseInt(request.getParameter("filas").toString());
+			String alumnos[]= new String[6];
+			boolean isUpdateExitoso = false;
+			for (int i=0 ;i <filas;i++) {
+				alumnos = request.getParameterValues("alumno"+i);
+				notas.setIdCurso(Integer.parseInt(request.getParameter("cursoPorID").toString()));
+				notas.setDniAlumno(Integer.parseInt(alumnos[0]));
+				notas.setParcialUno(Float.parseFloat(alumnos[1]));
+				notas.setParcialDos(Float.parseFloat(alumnos[2]));
+				notas.setRecuperatorioUno(Float.parseFloat(alumnos[3]));
+				notas.setRecuperatorioDos(Float.parseFloat(alumnos[4]));
+				notas.setEstado(Boolean.parseBoolean(alumnos[5]));
+				//notasAlumnos.add(notas);
+				notas.toString();
+				isUpdateExitoso = daoCursosxAlumnos.update(notas);
+				if(!isUpdateExitoso) break; 
+			}
+			
+			String mensaje = (isUpdateExitoso) ? "Notas agregadas correctamente" : "Ocurrio un error al actualizar";
+			request.setAttribute("updateExitosoNotas", mensaje);
+			
+			listaAlumnos = daoAlumno.readAll();
+			notasAlumnos = daoCursosxAlumnos.readAllFromID(Integer.parseInt(request.getParameter("cursoPorID").toString()));
+			Curso cursoPorID = daoCursos.cursoFromID(Integer.parseInt(request.getParameter("cursoPorID").toString()));
+			listaMaterias = daoMateria.readAll();
+			request.setAttribute("listaAlumnos", listaAlumnos);
+			request.setAttribute("notasAlumnos", notasAlumnos);
+			request.setAttribute("cursoPorID", cursoPorID);
+			request.setAttribute("listaMaterias", listaMaterias );
+			RequestDispatcher rd = request.getRequestDispatcher("Docente/AlumnosCursos.jsp");
+			
+			rd.forward(request, response);
+		}
+        
+        if(request.getParameter("toAltaCursos")!=null) { // ----LINK HACIA ALTA CURSOS
+        	
+        	request.setAttribute("listaDocentes", listaDocentes);
+        	request.setAttribute("listaAlumnos", listaAlumnos);
+        	request.setAttribute("listaMaterias", listaMaterias );
+			RequestDispatcher rd = request.getRequestDispatcher("Administrador/AltaCursos.jsp");
+			rd.forward(request, response);
+        }
+        
+        if(request.getParameter("agregarCurso")!=null) { // ----BOTON PARA AGREGAR CURSO y tambien alumnos de ese curso.
+        	
+            Curso curso = new Curso();
+        	CursosAlumnos cxa = new CursosAlumnos();
+        	String[] checked = request.getParameterValues("dni");
+        	ArrayList <Alumno> alumnosRebotados =  new ArrayList <Alumno>();
+        	boolean insertCursoExitoso;
+        	boolean insertAlumnoExitoso;
+        	
+        	//insercion del curso.
+        	curso.setIdMateria(Integer.parseInt(request.getParameter("idMateria").toString()));
+        	curso.setSemestre(Integer.parseInt(request.getParameter("semestre").toString()));
+        	curso.setAnio(Integer.parseInt(request.getParameter("anio").toString()));
+        	curso.setDniDocente(Integer.parseInt(request.getParameter("dniDocente").toString()));
+        	
+        	insertCursoExitoso = daoCursos.insert(curso);
+        	
+        	//insercion de alumnosxcurso
+        	if (insertCursoExitoso) {
+        	for(int i=0; i < checked.length; i++) {
+        		
+        		cxa.setIdCurso(daoCursos.readLast().getId());
+        		cxa.setDniAlumno(Integer.parseInt(checked[i]));
+        		
+        		insertAlumnoExitoso=daoCursosxAlumnos.insert(cxa); 
+        		   if (!insertAlumnoExitoso) { //si falla en alguno, va agregando a la lista de rebotados.
+        			alumnosRebotados.add(daoAlumno.readFromDni(Integer.parseInt(checked[i])));
+        		  }
+        	    }
+        	}
+        	
+        	listaDocentes = daoDocente.readAll();
+        	listaMaterias = daoMateria.readAll();
+        	listaAlumnos = daoAlumno.readAll();
+        	
+        	String mensaje = (insertCursoExitoso) ? "Curso agregado correctamente" : "Ocurrio un error";
+        	request.setAttribute("mensajeAltaCurso", mensaje);
+        	
+        	//Comentado, Nico revisar si es necesario esto
+        	//request.setAttribute("insertExitoso", insertCursoExitoso);
+        	
+        	if(alumnosRebotados != null) {
+        	request.setAttribute("alumnosRebotados", alumnosRebotados);
+        	}
+        	
+        	request.setAttribute("listaDocentes", listaDocentes);
+        	request.setAttribute("listaAlumnos", listaAlumnos);
+        	request.setAttribute("listaMaterias", listaMaterias );
+			RequestDispatcher rd = request.getRequestDispatcher("Administrador/AltaCursos.jsp");
+			rd.forward(request, response);
+        }
+	}
+
+	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		
+		doGet(request, response);
+		
+		daoImplLogin  daoImplLogin;
+		daoImplLogin = new daoImplLogin();
+		
+		String email = request.getParameter("email");
+		String contrasenia = request.getParameter("contrasenia");
+		Perfil perfil;
+		
+
+		try {
+			perfil = daoImplLogin.getValidPerfil(email, contrasenia);
+			
+			if (perfil.isEstado() ) {
+				
+				if(perfil.isAdministrador()) {
+				request.getSession().setAttribute("Perfil",perfil);	
+				RequestDispatcher rd = request.getRequestDispatcher("/Administrador/Administrador.jsp");
+				rd.forward(request,response);
+				}else {
+		
+						request.getSession().setAttribute("Perfil",perfil);	
+						RequestDispatcher rd = request.getRequestDispatcher("/Docente/Docente.jsp");
+						rd.forward(request,response);
+					  
+					}
+				
+				
+			} else {
+				
+				request.setAttribute("perfilInvalido","Usuario o contrasenia invalido");
+				RequestDispatcher rd = request.getRequestDispatcher("Login.jsp");
+				rd.forward(request,response);
+				
+			}
+		} catch (ClassNotFoundException e) {
+			e.printStackTrace();
+		}
+		
+	}
+
+}
